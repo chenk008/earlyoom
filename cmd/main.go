@@ -84,6 +84,7 @@ func parseCgroup(cgroupData string, clientset kubernetes.Interface, nodeName str
 				i := strings.LastIndex(podCgroup, "pod")
 				if i != -1 {
 					podId := podCgroup[i+3 : len(podCgroup)-6]
+					podId = strings.ReplaceAll(podId, "_", "-")
 					podlist, err := clientset.CoreV1().Pods(metav1.NamespaceAll).List(context.TODO(), metav1.ListOptions{
 						FieldSelector:   fields.OneTermEqualSelector("spec.nodeName", string(nodeName)).String(),
 						ResourceVersion: "0",
@@ -102,9 +103,16 @@ func parseCgroup(cgroupData string, clientset kubernetes.Interface, nodeName str
 								return p.Namespace, involvedObject
 							}
 						}
+						klog.Infof("failed to get match pod:%v", podId)
 					}
+				} else {
+					klog.Infof("failed to parse podCgroup:%v", cgroupHierarch[3])
 				}
+			} else {
+				klog.Infof("failed to parse cgroupHierarch:%v", cgroupHierarch)
 			}
+		} else {
+			klog.Infof("failed to parse cgroupData:%v", cgroupInfo)
 		}
 	}
 	klog.Infof("failed to parse cgroup:%s", cgroupData)

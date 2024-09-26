@@ -95,6 +95,7 @@ static void notify_ext(const char* script, const procinfo_t* victim)
     setenv("EARLYOOM_UID", uid_str, 1);
     setenv("EARLYOOM_NAME", victim->name, 1);
     setenv("EARLYOOM_CMDLINE", victim->cmdline, 1);
+    setenv("EARLYOOM_CGROUP", victim->cgroup, 1);
 
     execl(script, script, NULL);
     warn("%s: exec %s failed: %s\n", __func__, script, strerror(errno));
@@ -405,6 +406,12 @@ void fill_informative_fields(procinfo_t* cur)
         int res = get_cmdline(cur->pid, cur->cmdline, sizeof(cur->cmdline));
         if (res < 0) {
             debug("%s: pid %d: error reading process cmdline: %s\n", __func__, cur->pid, strerror(-res));
+        }
+    }
+    if (strlen(cur->cgroup) == 0) {
+        int res = get_cgrouppath(cur->pid, cur->cgroup, sizeof(cur->cgroup));
+        if (res < 0) {
+            debug("%s: pid %d: error reading process cgroup: %s\n", __func__, cur->pid, strerror(-res));
         }
     }
     if (cur->uid == PROCINFO_FIELD_NOT_SET) {

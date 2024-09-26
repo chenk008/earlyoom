@@ -284,3 +284,35 @@ void print_mem_stats(int __attribute__((format(printf, 1, 2))) (*out_func)(const
         m.SwapTotalKiB / 1024,
         m.SwapFreePercent);
 }
+
+
+int get_cgrouppath(int pid, char* out, size_t outlen)
+{
+    char path[PATH_LEN] = { 0 };
+    snprintf(path, sizeof(path), "%s/%d/cgroup", procdir_path, pid);
+    FILE* f = fopen(path, "r");
+    if (f == NULL) {
+        return -errno;
+    }
+    size_t n = fread(out, 1, outlen - 1, f);
+    if (ferror(f)) {
+        int fread_errno = errno;
+        perror("get_cgrouppath: fread() failed");
+        fclose(f);
+        return -fread_errno;
+    }
+    // ssize_t read;
+    // while ((read = getline(out, &outlen, f)) != -1) {
+    //     printf("Retrieved line of length %zu:\n", read);
+    //     printf("%s", line);
+    // }
+    fclose(f);
+    // for (size_t i = 0; i < n; i++) {
+    //     if (out[i] == '\n') {
+    //         break;
+    //     }
+    // }
+    // Strip trailing space
+    out[n - 1] = 0;
+    return 0;
+}

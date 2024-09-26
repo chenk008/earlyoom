@@ -18,7 +18,7 @@ PANDOC := $(shell command -v pandoc 2> /dev/null)
 
 .PHONY: all clean install uninstall format test
 
-all: earlyoom earlyoom.1 earlyoom.service
+all: earlyoom k8s_event earlyoom.1 earlyoom.service 
 
 earlyoom: $(wildcard *.c *.h) Makefile
 	$(CC) $(LDFLAGS) $(CPPFLAGS) $(CFLAGS) -o $@ $(wildcard *.c)
@@ -34,8 +34,11 @@ else
 	@echo "pandoc is not installed, skipping earlyoom.1 manpage generation"
 endif
 
+k8s_event:
+	env GOOS=linux GOARCH=amd64 go build -v -o k8s_event cmd/main.go	
+
 clean:
-	rm -f earlyoom earlyoom.profile earlyoom.service earlyoom.initscript earlyoom.1 earlyoom.1.gz gmon.out*
+	rm -f earlyoom earlyoom.profile earlyoom.service earlyoom.initscript earlyoom.1 earlyoom.1.gz gmon.out* k8s_event
 
 install: earlyoom.service install-bin install-default install-man
 	install -d $(DESTDIR)$(SYSTEMDUNITDIR)
